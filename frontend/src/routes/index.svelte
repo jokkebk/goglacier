@@ -13,6 +13,6 @@
 
 <ul>
     {#each dbs as db}
-    <li>{db}</li>
+    <li><a href="/db/{db}">{db}</a></li>
     {/each}
 </ul>
