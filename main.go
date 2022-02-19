@@ -19,6 +19,8 @@ func databases(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	fmt.Println(getDBEntries())
+	return
 	// Windows may be missing this
 	mime.AddExtensionType(".js", "application/javascript")
 
