@@ -8,13 +8,16 @@ import (
 
 var db *sqlx.DB
 
-func init() { // Open DB
+func dbOpen(dbName string) { // Open DB
 	var err error
-	db, err = sqlx.Connect("sqlite3", "./kejjosdeep.db")
+	db, err = sqlx.Connect("sqlite3", dbName)
 	if err != nil {
 		panic(err)
 	}
-	//defer db.Close()
+}
+
+func dbClose() {
+	db.Close()
 }
 
 type Entry struct {

@@ -1,18 +1,66 @@
 <script>
     import { onMount } from "svelte";
 
-    let dbs = [];
+    let entries = [];
 
     onMount(async function() {
-        const response = await fetch('http://localhost:8080/dbs');
-        dbs = await response.json();
+        let resp = await fetch('http://localhost:8080/entries');
+        entries = await resp.json();
+        let eMap = Object.fromEntries(entries.map(e => [e.Id, e]))
+        
+        resp = await fetch('http://localhost:8080/scans');
+        const scans = await resp.json();
+        scans.forEach(e => {
+            const entry = eMap[e.EntryId];
+            if(!('scans' in entry)) entry['scans'] = [];
+            entry.scans.push(e);
+        });
+        entries = entries;
     });
-</script>
-<h1>Welcome to GoGlacier</h1>
-<p>Choose a backup DB:</p>
 
-<ul>
-    {#each dbs as db}
-    <li><a href="/db/{db}">{db}</a></li>
+    async function scan(e) {
+        let folder = prompt('Enter folder to scan',
+            e.scans ? e.scans.slice(-1)[0].Folder : '');
+        
+        let resp = await fetch('http://localhost:8080/scan', {
+            method: 'POST', body: JSON.stringify({'EntryId': e.Id, folder})
+        });
+    }
+</script>
+
+<h1>GoGlacier</h1>
+<p>Backup entries:</p>
+
+  {#each entries as e}
+  <h2>{e.Name}</h2>
+  {#if e.scans}
+  <table>
+      <thead>
+          <tr>
+              <th>Folder</th>
+              <th>Date</th>
+              <th>Skip</th>
+          </tr>
+      </thead>
+      <tbody>
+    {#each e.scans as s}
+        <tr>
+            <td>{s.Folder}</td>
+            <td>{s.Date}</td>
+            <td>{s.Skip}</td>
+        </tr>
     {/each}
-</ul>
+      </tbody>
+  </table>
+    {/if}
+    
+    <button on:click={scan(e)}>Scan now</button>
+  {/each}
+
+  <style>
+      table {
+          border-collapse: collapse;
+      }
+
+      th, td { border: 1px solid black; }
+  </style>

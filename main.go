@@ -3,28 +3,53 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"mime"
 	"net/http"
+	"os"
 )
 
-func databases(w http.ResponseWriter, r *http.Request) {
+func entries(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
-	dbs := []string{}
-	dbs = append(dbs, "Hello")
-	dbs = append(dbs, "World")
-	json.NewEncoder(w).Encode(dbs)
+	json.NewEncoder(w).Encode(dbEntries())
+}
+
+func scans(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(dbScans())
+}
+
+func scan(w http.ResponseWriter, r *http.Request) {
+	var s Scan
+	err := json.NewDecoder(r.Body).Decode(&s)
+	if err != nil {
+		return // Silently fail on invalid POST data
+	}
+	fmt.Println(s)
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "Oh hi!")
 }
 
 func main() {
-	fmt.Println(dbScans())
-	return
+	if len(os.Args) < 2 {
+		panic("Missing SQLite database as parameter!")
+	}
+	dbOpen(os.Args[1])
+	defer dbClose()
+
 	// Windows may be missing this
 	mime.AddExtensionType(".js", "application/javascript")
 
-	http.Handle("/dbs", http.HandlerFunc(databases))
+	http.Handle("/entries", http.HandlerFunc(entries))
+	http.Handle("/scans", http.HandlerFunc(scans))
+	http.Handle("/scan", http.HandlerFunc(scan))
 	http.Handle("/", http.FileServer(http.Dir("static")))
 
 	fmt.Println("Starting to serve GUI at http://localhost:8080")
