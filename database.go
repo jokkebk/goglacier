@@ -45,7 +45,7 @@ type File struct {
 }
 
 func dbEntries() (entries []Entry) {
-	err := db.Select(&entries, "SELECT rowid, * FROM entries")
+	err := db.Select(&entries, "SELECT rowid, * FROM entries ORDER BY name")
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +53,7 @@ func dbEntries() (entries []Entry) {
 }
 
 func dbScans() (scans []Scan) {
-	err := db.Select(&scans, "SELECT rowid, * FROM scans")
+	err := db.Select(&scans, "SELECT rowid, * FROM scans ORDER BY entry_id, date_gmt")
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +62,7 @@ func dbScans() (scans []Scan) {
 
 func dbFiles(entryId int) (files []File) {
 	err := db.Select(&files, `SELECT rowid, * FROM files WHERE scan_id IN
-		(SELECT DISTINCT scan_id FROM scans WHERE entry_id = $1)`, entryId)
+		(SELECT DISTINCT scan_id FROM scans WHERE entry_id = $1) ORDER BY scan_id, filename`, entryId)
 	if err != nil {
 		panic(err)
 	}
