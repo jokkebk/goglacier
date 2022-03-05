@@ -8,6 +8,9 @@ import (
 	"mime"
 	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func printJson(data interface{}) {
@@ -15,34 +18,37 @@ func printJson(data interface{}) {
 	fmt.Println(string(bs))
 }
 
-func entries(w http.ResponseWriter, r *http.Request) {
+func Entries(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	es := dbEntries()
 	json.NewEncoder(w).Encode(es)
-	printJson(es)
+	//printJson(es)
 }
 
-func scans(w http.ResponseWriter, r *http.Request) {
+func Scans(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	ss := dbScans()
 	json.NewEncoder(w).Encode(ss)
-	printJson(ss)
+	//printJson(ss)
 }
 
-func files(w http.ResponseWriter, r *http.Request) {
+func Files(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
-	fs := dbFiles(1)
-	json.NewEncoder(w).Encode(fs)
-	printJson(fs)
+	if scanId, err := strconv.Atoi(ps.ByName("scanid")); err != nil {
+		fmt.Println("Invalid scan id")
+	} else {
+		fs := dbFiles(scanId)
+		json.NewEncoder(w).Encode(fs)
+	}
 }
 
-func scan(w http.ResponseWriter, r *http.Request) {
+func DoScan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var s Scan
 	err := json.NewDecoder(r.Body).Decode(&s)
 	if err != nil {
@@ -65,12 +71,14 @@ func main() {
 	// Windows may be missing this
 	mime.AddExtensionType(".js", "application/javascript")
 
-	http.Handle("/entries", http.HandlerFunc(entries))
-	http.Handle("/scans", http.HandlerFunc(scans))
-	http.Handle("/scan", http.HandlerFunc(scan))
-	http.Handle("/files", http.HandlerFunc(files))
-	http.Handle("/", http.FileServer(http.Dir("static")))
+	router := httprouter.New()
+	router.GET("/entries", Entries)
+	router.GET("/scans", Scans)
+	router.GET("/scan", DoScan)
+	router.GET("/files/:scanid", Files)
+	router.NotFound = http.FileServer(http.Dir("static"))
+	//router.ServeFiles("/*filepath", http.Dir("static"))
 
 	fmt.Println("Starting to serve GUI at http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
