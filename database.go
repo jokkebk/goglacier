@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -33,6 +35,15 @@ type Scan struct {
 	Skip    string `db:"skip"`
 }
 
+type File struct {
+	Id       int            `db:"rowid"`
+	ScanId   int            `db:"scan_id"`
+	Filename string         `db:"filename"`
+	Modified sql.NullString `db:"modified_gmt"`
+	Size     sql.NullInt64  `db:"size"`
+	Sha1     sql.NullString `db:"sha1"`
+}
+
 func dbEntries() (entries []Entry) {
 	err := db.Select(&entries, "SELECT rowid, * FROM entries")
 	if err != nil {
@@ -43,6 +54,15 @@ func dbEntries() (entries []Entry) {
 
 func dbScans() (scans []Scan) {
 	err := db.Select(&scans, "SELECT rowid, * FROM scans")
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func dbFiles(entryId int) (files []File) {
+	err := db.Select(&files, `SELECT rowid, * FROM files WHERE scan_id IN
+		(SELECT DISTINCT scan_id FROM scans WHERE entry_id = $1)`, entryId)
 	if err != nil {
 		panic(err)
 	}

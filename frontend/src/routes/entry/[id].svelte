@@ -2,4 +2,4 @@
     import { page } from '$app/stores';
 </script>
 
-{$page.params.id}
+<h1>Entry {$page.params.id}</h1>

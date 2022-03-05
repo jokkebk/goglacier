@@ -33,6 +33,15 @@ func scans(w http.ResponseWriter, r *http.Request) {
 	printJson(ss)
 }
 
+func files(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	fs := dbFiles(1)
+	json.NewEncoder(w).Encode(fs)
+	printJson(fs)
+}
+
 func scan(w http.ResponseWriter, r *http.Request) {
 	var s Scan
 	err := json.NewDecoder(r.Body).Decode(&s)
@@ -59,6 +68,7 @@ func main() {
 	http.Handle("/entries", http.HandlerFunc(entries))
 	http.Handle("/scans", http.HandlerFunc(scans))
 	http.Handle("/scan", http.HandlerFunc(scan))
+	http.Handle("/files", http.HandlerFunc(files))
 	http.Handle("/", http.FileServer(http.Dir("static")))
 
 	fmt.Println("Starting to serve GUI at http://localhost:8080")
