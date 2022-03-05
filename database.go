@@ -34,7 +34,7 @@ type Scan struct {
 }
 
 func dbEntries() (entries []Entry) {
-	err := db.Select(&entries, "SELECT rowid, name FROM entries")
+	err := db.Select(&entries, "SELECT rowid, * FROM entries")
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +42,7 @@ func dbEntries() (entries []Entry) {
 }
 
 func dbScans() (scans []Scan) {
-	err := db.Select(&scans, "SELECT * FROM scans")
+	err := db.Select(&scans, "SELECT rowid, * FROM scans")
 	if err != nil {
 		panic(err)
 	}

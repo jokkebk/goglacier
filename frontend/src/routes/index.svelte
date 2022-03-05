@@ -29,7 +29,6 @@
 </script>
 
 <h1>GoGlacier</h1>
-<p>Backup entries:</p>
 
   {#each entries as e}
   <h2>{e.Name}</h2>
@@ -40,6 +39,7 @@
               <th>Folder</th>
               <th>Date</th>
               <th>Skip</th>
+              <th>Actions</th>
           </tr>
       </thead>
       <tbody>
@@ -48,6 +48,7 @@
             <td>{s.Folder}</td>
             <td>{s.Date}</td>
             <td>{s.Skip}</td>
+            <td><a href="/scan/{s.Id}"><i class="bi-zoom-in"></i></a></td>
         </tr>
     {/each}
       </tbody>

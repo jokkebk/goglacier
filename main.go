@@ -10,18 +10,27 @@ import (
 	"os"
 )
 
+func printJson(data interface{}) {
+	bs, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(bs))
+}
+
 func entries(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dbEntries())
+	es := dbEntries()
+	json.NewEncoder(w).Encode(es)
+	printJson(es)
 }
 
 func scans(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dbScans())
+	ss := dbScans()
+	json.NewEncoder(w).Encode(ss)
+	printJson(ss)
 }
 
 func scan(w http.ResponseWriter, r *http.Request) {
