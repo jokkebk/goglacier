@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 
@@ -61,8 +62,9 @@ func dbScans() (scans []Scan) {
 }
 
 func dbFiles(entryId int) (files []File) {
+	fmt.Println(entryId)
 	err := db.Select(&files, `SELECT rowid, * FROM files WHERE scan_id IN
-		(SELECT DISTINCT scan_id FROM scans WHERE entry_id = $1) ORDER BY scan_id, filename`, entryId)
+		(SELECT DISTINCT rowid FROM scans WHERE entry_id = ?) ORDER BY scan_id, filename`, entryId)
 	if err != nil {
 		panic(err)
 	}
