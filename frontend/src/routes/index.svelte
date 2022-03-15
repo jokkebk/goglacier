@@ -58,7 +58,7 @@
                     {/if}
                 </td>
                 <td><a href="/entry/{e.Id}">
-                        <i class="bi-zoom-in" /> Scan now</a>
+                        <i class="bi-zoom-in" /> View entry</a>
                     </td>
             </tr>
         {/each}
