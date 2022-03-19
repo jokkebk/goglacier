@@ -43,6 +43,7 @@ func Files(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	} else {
 		fs := dbFiles(scanId)
 		json.NewEncoder(w).Encode(fs)
+		printJson(fs)
 	}
 }
 

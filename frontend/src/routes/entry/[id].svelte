@@ -3,10 +3,62 @@
     import FileTree from '$lib/FileTree.svelte';
     import { onMount } from "svelte";
 
-    let entry = {};
-    let scans = [];
     let entryId = $page.params.id;
-    let treeData = {};
+    let entry = {};
+
+    let scans = [];
+    let selected; // selected scan
+
+    let files = [];
+    let treeData;
+
+
+    $: if(selected && selected.Id) {
+        // We will see the folders in order, so children will come after parent
+        let base = {}, folderMap = {};
+
+        for(let f of files) {
+            if(f.ScanId < selected.Id) { // build base
+                if(f.Modified === null) delete base[f.Filename];
+                else base[f.Filename] = f;
+            } else if(f.ScanId == selected.Id) { // build deltas
+                let change, type;
+                if(f.Modified === null) {
+                    type = base[f.Filename].Size === null ? 'dir' : 'file';
+                    change = 'del';
+                } else {
+                    type = f.Size === null ? 'dir' : 'file';
+                    change = (f.Filename in base) ? 'chg' : 'new';
+                }
+                //console.log(change, type, f.Filename);
+                
+                // Propagate delta to folder tree
+                let parts = f.Filename.split('/');
+                for(let i=0; i<=parts.length - (type=='file'?1:0); i++) {
+                    let path = parts.slice(0,i).join('/'), dir;
+                    if(path in folderMap) dir = folderMap[path];
+                    else folderMap[path] = dir = {
+                        name: i ? parts[i-1]:'Root',
+                        expanded: !i,
+                        children: [],
+                        count: {'chg': 0, 'new': 0, 'del': 0}
+                    };
+                    dir.count[change]++;
+                    //console.log(path, dir);
+                }
+            } else break; // end after selected id
+        }
+
+        for(let key of Object.keys(folderMap).sort()) {
+            if(key === '') continue;
+            const dir = folderMap[key];
+            const parentDir = key.split('/').slice(0,-1).join('/');
+            const parent = folderMap[parentDir];
+            //console.log(`Adding ${dir.name} to ${parent.name}...`);
+            parent.children.push(dir);
+        }
+        treeData = folderMap[''];
+    }
 
     onMount(async function () {
         let resp = await fetch("http://localhost:8080/entries");
@@ -18,42 +70,24 @@
         scans = scans.filter(s => s.EntryId == entryId);
 
         resp = await fetch("http://localhost:8080/files/"+entryId);
-        let files = await resp.json();
-        let folders = files.filter(f => f.Size === null);
-        let folderMap = {};
-
-        // We will see the folders in order, so children will come after parent
-        for(let f of folders) {
-            f.children = []; // initialize
-            f.expanded = false;
-            folderMap[f.Filename] = f; // save
-
-            if(f.Filename == '.') {
-                f.name = 'Root';
-                f.expanded = true;
-                continue; // we're done
-            }
-
-            let parts = f.Filename.split('/');
-            f.name = parts.pop();
-            let parentFolder = parts.length ? parts.join('/') : '.';
-            f.parent = folderMap[parentFolder];
-            f.parent.children.push(f);
-        }
-        treeData = folderMap['.'];
-        console.log(treeData.children);
+        files = await resp.json();
+        
+        selected = scans.slice(-1)[0];
     });
-
-    //function 
 </script>
 
 <h1>{entry.Name}</h1>
 
+<select bind:value={selected}>
+{#each scans as s}
+<option value={s}>#{s.Id}: {s.Date} {s.Folder}</option>
+{/each}
+</select>
+
+{#if treeData}
 <FileTree data={treeData}/>
+{/if}
 
 <h2>Scans</h2>
 <ul>
-{#each scans as s}
-<li>#{s.Id} {s.Date} {s.Folder}</li>
-{/each}
 </ul>

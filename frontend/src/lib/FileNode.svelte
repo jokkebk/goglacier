@@ -1,8 +1,9 @@
 <script>
-    import { children } from 'svelte/internal';
-import { slide } from 'svelte/transition';
+    import { slide } from 'svelte/transition';
 	export let node;
 	export let level = 0;
+
+    const changes = 'chg new del'.split(' ');
 	
 	function toggle() {
 		node.expanded = !node.expanded;
@@ -17,7 +18,12 @@ import { slide } from 'svelte/transition';
 	{:else}
         <i class="bi-folder-minus" /> 
 	{/if}
-	{node.name}
+    {node.name}
+    {#each changes as c}
+    {#if node.count[c]}
+    <span class={c}>{node.count[c]} {c}</span>
+    {/if}
+    {/each}
 </li>
 
 {#if node.expanded && node.children}
@@ -33,5 +39,15 @@ li {
     padding: 0.2rem;
     background: #fafafa;
     //display: flex;
+}
+
+span.chg { background-color: #ccf; }
+span.new { background-color: #cfc; }
+span.del { background-color: #fcc; }
+span.chg, span.new, span.del {
+    border-radius: 0.5em;
+    margin: 0.2em;
+    padding: 0.2em;
+    font-size: 80%;
 }
 </style>
