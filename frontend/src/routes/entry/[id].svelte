@@ -14,13 +14,15 @@
 
 
     $: if(selected && selected.Id) {
-        // We will see the folders in order, so children will come after parent
-        let base = {}, folderMap = {};
+        let base = {};
+        let folderMap = {'': { name: 'Root', expanded: true, children: [],
+                        count: {'chg': 0, 'new': 0, 'del': 0} }};
 
+        // We will see the folders in order, so children will come after parent
         for(let f of files) {
             if(f.ScanId < selected.Id) { // build base
-                if(f.Modified === null) delete base[f.Filename];
-                else base[f.Filename] = f;
+                if(f.Modified !== null) base[f.Filename] = f;
+                else delete base[f.Filename];
             } else if(f.ScanId == selected.Id) { // build deltas
                 let change, type;
                 if(f.Modified === null) {
@@ -30,6 +32,7 @@
                     type = f.Size === null ? 'dir' : 'file';
                     change = (f.Filename in base) ? 'chg' : 'new';
                 }
+                if(change=='chg' && type=='dir') continue; // don't care
                 //console.log(change, type, f.Filename);
                 
                 // Propagate delta to folder tree
@@ -37,10 +40,8 @@
                 for(let i=0; i<=parts.length - (type=='file'?1:0); i++) {
                     let path = parts.slice(0,i).join('/'), dir;
                     if(path in folderMap) dir = folderMap[path];
-                    else folderMap[path] = dir = {
-                        name: i ? parts[i-1]:'Root',
-                        expanded: !i,
-                        children: [],
+                    else folderMap[path] = dir = { // never i=0, ''
+                        name: parts[i-1], expanded: false, children: [],
                         count: {'chg': 0, 'new': 0, 'del': 0}
                     };
                     dir.count[change]++;
@@ -49,7 +50,17 @@
             } else break; // end after selected id
         }
 
-        for(let key of Object.keys(folderMap).sort()) {
+        // For easier tracking, add top level folders from base
+        for(const key of Object.keys(base)) {
+            const f = base[key];
+            if(f.Size !== null || f.Filename.indexOf('/')!=-1 ||
+                f.Filename in folderMap) continue;
+            folderMap[f.Filename] = {name: f.Filename,
+                children: [], count: {'chg':0,'new':0,'del':0}};
+        }
+
+        // Add deltas
+        for(const key of Object.keys(folderMap).sort()) {
             if(key === '') continue;
             const dir = folderMap[key];
             const parentDir = key.split('/').slice(0,-1).join('/');
@@ -57,6 +68,7 @@
             //console.log(`Adding ${dir.name} to ${parent.name}...`);
             parent.children.push(dir);
         }
+        
         treeData = folderMap[''];
     }
 
