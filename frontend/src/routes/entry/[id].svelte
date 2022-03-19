@@ -19,7 +19,7 @@
 
         resp = await fetch("http://localhost:8080/files/"+entryId);
         let files = await resp.json();
-        let folders = files.filter(f => !f.Size.Valid);
+        let folders = files.filter(f => f.Size === null);
         let folderMap = {};
 
         // We will see the folders in order, so children will come after parent
@@ -44,7 +44,7 @@
         console.log(treeData.children);
     });
 
-
+    //function 
 </script>
 
 <h1>{entry.Name}</h1>
@@ -54,6 +54,6 @@
 <h2>Scans</h2>
 <ul>
 {#each scans as s}
-<li>{s.Date} {s.Folder}</li>
+<li>#{s.Id} {s.Date} {s.Folder}</li>
 {/each}
 </ul>

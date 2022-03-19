@@ -24,7 +24,6 @@ func Entries(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 	es := dbEntries()
 	json.NewEncoder(w).Encode(es)
-	//printJson(es)
 }
 
 func Scans(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -33,7 +32,6 @@ func Scans(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 	ss := dbScans()
 	json.NewEncoder(w).Encode(ss)
-	//printJson(ss)
 }
 
 func Files(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -77,7 +75,6 @@ func main() {
 	router.GET("/scan", DoScan)
 	router.GET("/files/:scanid", Files)
 	router.NotFound = http.FileServer(http.Dir("static"))
-	//router.ServeFiles("/*filepath", http.Dir("static"))
 
 	fmt.Println("Starting to serve GUI at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))

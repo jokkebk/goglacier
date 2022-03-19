@@ -10,7 +10,7 @@ import { slide } from 'svelte/transition';
 </script>
 
 <li on:click={toggle} style="padding-left:{level*1}rem" transition:slide>
-    {#if !node.children.length }
+    {#if !node.children || !node.children.length}
         <i class="bi-folder" /> 
 	{:else if !node.expanded }
         <i class="bi-folder-plus" /> 

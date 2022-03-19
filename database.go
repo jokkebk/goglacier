@@ -1,12 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/guregu/null.v4"
 )
 
 var db *sqlx.DB
@@ -37,12 +37,12 @@ type Scan struct {
 }
 
 type File struct {
-	Id       int            `db:"rowid"`
-	ScanId   int            `db:"scan_id"`
-	Filename string         `db:"filename"`
-	Modified sql.NullString `db:"modified_gmt"`
-	Size     sql.NullInt64  `db:"size"`
-	Sha1     sql.NullString `db:"sha1"`
+	Id       int         `db:"rowid"`
+	ScanId   int         `db:"scan_id"`
+	Filename string      `db:"filename"`
+	Modified null.String `db:"modified_gmt"`
+	Size     null.Int    `db:"size"`
+	Sha1     null.String `db:"sha1"`
 }
 
 func dbEntries() (entries []Entry) {
